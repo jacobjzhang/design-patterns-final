@@ -11,7 +11,7 @@
 		<java-version>1.6</java-version>
 		<org.springframework-version>4.2.6.RELEASE</org.springframework-version>
 		<org.aspectj-version>1.6.10</org.aspectj-version>
-		<!-- <org.slf4j-version>1.6.6</org.slf4j-version> -->
+		<org.slf4j-version>1.6.6</org.slf4j-version>
 	</properties>
 
 	<parent>
@@ -28,10 +28,10 @@
 			<version>${org.springframework-version}</version>
 			<exclusions>
 				<!-- Exclude Commons Logging in favor of SLF4j -->
-				<!-- <exclusion>
+				<exclusion>
 					<groupId>commons-logging</groupId>
 					<artifactId>commons-logging</artifactId>
-				 </exclusion> -->
+				 </exclusion>
 				 <!-- Exclusions to allow SpringBoot execute on HCP -->
 				<exclusion>
 						<groupId>org.springframework.boot</groupId>
@@ -85,7 +85,7 @@
 		</dependency>
 
 		<!-- Logging -->
-		<!-- <dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>${org.slf4j-version}</version>
@@ -96,12 +96,12 @@
 			<version>${org.slf4j-version}</version>
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>${org.slf4j-version}</version>
 			<scope>runtime</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -125,7 +125,7 @@
 				</exclusion>
 			</exclusions>
 			<scope>runtime</scope>
-		</dependency> -->
+		</dependency>
 
 		<!-- @Inject -->
 		<dependency>
