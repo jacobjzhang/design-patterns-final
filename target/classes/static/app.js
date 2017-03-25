@@ -65,9 +65,60 @@ var ReferenceTable = React.createClass({
 
 var AddReferencesForm = React.createClass({
 
+  getInitialState: function() {
+    return { 
+      author: '',
+      title: '',
+      year: '',
+      journal: ''
+    };
+  },
+
+  handleInputChange: function(event) {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  },
+
+  handleSubmit: function(event) {
+    event.preventDefault();
+
+    console.log(event);
+
+    this.props.add({
+      author: this.state.author,
+      title: this.state.title,
+      year: this.state.year,
+      journal: this.state.journal
+    });
+  },
+
   render: function() {
     return (
-      <button className="btn btn-info" onClick={this.props.add}>Add</button>
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Author
+          <input type="text" name="author" placeholder={this.state.author} onChange={this.handleInputChange} />
+        </label>
+        <label>
+          Label
+          <input type="text" name="title" placeholder={this.state.title} onChange={this.handleInputChange} />
+        </label>
+        <label>
+          Label
+          <input type="text" name="year" placeholder={this.state.year} onChange={this.handleInputChange} />
+        </label>
+        <label>
+          Label
+          <input type="text" name="journal" placeholder={this.state.journal} onChange={this.handleInputChange} />
+        </label>
+
+        <input className="btn btn-info" type="submit" value="Submit" />
+      </form>
     )
 
   }
@@ -95,7 +146,7 @@ var App = React.createClass({
     this.loadReferencesFromServer();
   },
 
-  add() {
+  add(obj) {
     var self = this;
     $.ajax({
         url: "http://localhost:8080/api/references",
@@ -104,9 +155,9 @@ var App = React.createClass({
         },
         method: 'POST',
         dataType: 'json',
-        data: '{"author" : "Jacob", "title" : "Zhang", "year" : "1991", "journal" : "China" }',
+        data: JSON.stringify(obj),
         success: function(result) {
-          self.loadReferencesFromServer();
+          self.setState({ references: self.state.references.concat(result)});
         },
         error: function(xhr, ajaxOptions, thrownError) {
           toastr.error(xhr.responseJSON.message);
