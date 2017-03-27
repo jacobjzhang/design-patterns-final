@@ -99,7 +99,7 @@ var AddReferencesForm = React.createClass({
 
   render: function() {
     return (
-      <form onSubmit={this.handleSubmit} className="col-md-8 offset-4">
+      <form onSubmit={this.handleSubmit}>
         <div className="form-group row">
           <div className="col-2 col-form-label">Author</div>
           <input className="col-10 form-control" type="text" name="author" placeholder={this.state.author} onChange={this.handleInputChange} />
@@ -168,8 +168,13 @@ var App = React.createClass({
   render() {
     return (
       <div>
-        <ReferenceTable references={this.state.references} /> 
-        <AddReferencesForm add={this.add} />
+        <div className="col-md-8">
+          <ReferenceTable references={this.state.references} /> 
+        </div>
+        <div className="col-md-4">
+          <h1>Add a Reference</h1>
+          <AddReferencesForm add={this.add} />
+        </div>
       </div>
     );
   }
