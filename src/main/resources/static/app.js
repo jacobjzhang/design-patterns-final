@@ -99,23 +99,23 @@ var AddReferencesForm = React.createClass({
 
   render: function() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          Author
-          <input type="text" name="author" placeholder={this.state.author} onChange={this.handleInputChange} />
-        </label>
-        <label>
-          Label
-          <input type="text" name="title" placeholder={this.state.title} onChange={this.handleInputChange} />
-        </label>
-        <label>
-          Label
-          <input type="text" name="year" placeholder={this.state.year} onChange={this.handleInputChange} />
-        </label>
-        <label>
-          Label
-          <input type="text" name="journal" placeholder={this.state.journal} onChange={this.handleInputChange} />
-        </label>
+      <form onSubmit={this.handleSubmit} className="col-md-8 offset-4">
+        <div className="form-group row">
+          <div className="col-2 col-form-label">Author</div>
+          <input className="col-10 form-control" type="text" name="author" placeholder={this.state.author} onChange={this.handleInputChange} />
+        </div>
+        <div className="form-group row">
+          <div className="col-2 col-form-label">Title</div>
+          <input className="col-10 form-control" type="text" name="title" placeholder={this.state.title} onChange={this.handleInputChange} />
+        </div>
+        <div className="form-group row">
+          <div className="col-2 col-form-label">Year</div>
+          <input className="col-10 form-control" type="text" name="year" placeholder={this.state.year} onChange={this.handleInputChange} />
+        </div>
+        <div className="form-group row">
+          <div className="col-2 col-form-label">Journal</div>
+          <input className="col-10 form-control" type="text" name="journal" placeholder={this.state.journal} onChange={this.handleInputChange} />
+        </div>
 
         <input className="btn btn-info" type="submit" value="Submit" />
       </form>
