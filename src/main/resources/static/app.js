@@ -1,22 +1,11 @@
 console.log('loading react script')
 
 var Reference = React.createClass({
-
+  handleDelete: function() {
+    this.props.handleDelete(this.props.reference);
+  },
   getInitialState: function() {
     return {display: true };
-  },
-  handleDelete() {
-    var self = this;
-    $.ajax({
-        url: self.props.reference._links.self.href,
-        type: 'DELETE',
-        success: function(result) {
-          self.setState({display: false});
-        },
-        error: function(xhr, ajaxOptions, thrownError) {
-          toastr.error(xhr.responseJSON.message);
-        }
-    });
   },
   render: function() {
 
@@ -26,7 +15,7 @@ var Reference = React.createClass({
           <td>{this.props.reference.author}</td>
           <td>{this.props.reference.title}</td>
           <td>{this.props.reference.year}</td>
-          <td>{this.props.reference.journal}</td>          
+          <td>{this.props.reference.journal}</td>
           <td>
             <button className="btn btn-info" onClick={this.handleDelete}>Delete</button>
           </td>
@@ -36,14 +25,17 @@ var Reference = React.createClass({
 });
 
 var ReferenceTable = React.createClass({
-
+  handleDelete: function(reference) {
+    this.props.handleDelete(reference);
+  },
   render: function() {
 
     var rows = [];
+    var self = this;
     this.props.references.forEach(function(reference) {
       console.log(reference);
       rows.push(
-        <Reference reference={reference} key={reference.author} />);
+        <Reference reference={reference} key={reference.author} handleDelete={self.handleDelete}/>);
     });
 
     return (
@@ -53,7 +45,7 @@ var ReferenceTable = React.createClass({
                   <th>Author</th>
                   <th>Title</th>
                   <th>Year</th>
-                  <th>Journal</th>                  
+                  <th>Journal</th>
                   <th>Delete</th>
               </tr>
           </thead>
@@ -66,7 +58,7 @@ var ReferenceTable = React.createClass({
 var AddReferencesForm = React.createClass({
 
   getInitialState: function() {
-    return { 
+    return {
       author: '',
       title: '',
       year: '',
@@ -126,7 +118,21 @@ var AddReferencesForm = React.createClass({
 })
 
 var App = React.createClass({
-
+  handleDelete: function(reference) {
+    console.log('handling delete')
+    var self = this;
+    $.ajax({
+        url: reference._links.self.href,
+        method: 'DELETE',
+        success: function(result) {
+          self.setState({display: false});
+          self.loadReferencesFromServer();
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+          toastr.error(xhr.responseJSON.message);
+        }
+    });
+  },
   loadReferencesFromServer: function() {
 
     var self = this;
@@ -168,7 +174,7 @@ var App = React.createClass({
   render() {
     return (
       <div>
-        <ReferenceTable references={this.state.references} /> 
+        <ReferenceTable references={this.state.references} handleDelete={this.handleDelete}/>
         <AddReferencesForm add={this.add} />
       </div>
     );
