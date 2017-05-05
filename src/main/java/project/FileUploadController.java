@@ -1,106 +1,102 @@
 package project;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import project.storage.StorageFileNotFoundException;
+import project.storage.StorageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.opencsv.CSVReader;
 
-/**
- * Handles requests for the application file upload requests
- */
+import java.io;
+import java.nio;
+import java.nio.*;
+import java.io.FileReader;
+import java.io.FileReader.*;
+import java.io.IOException;
+import java.util.stream.Collectors;
+
 @Controller
 public class FileUploadController {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(FileUploadController.class);
+    private final StorageService storageService;
 
-	/**
-	 * Upload single file using Spring Controller
-	 */
-	@RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
-	public @ResponseBody
-	String uploadFileHandler(@RequestParam("name") String name,
-			@RequestParam("file") MultipartFile file) {
+    @Autowired
+    public FileUploadController(StorageService storageService) {
+        this.storageService = storageService;
+    }
 
-		if (!file.isEmpty()) {
-			try {
-				byte[] bytes = file.getBytes();
+    @GetMapping("/uploadfile")
+    public String listUploadedFiles(Model model) throws IOException {
 
-				// Creating the directory to store file
-				String rootPath = System.getProperty("catalina.home");
-				File dir = new File(rootPath + File.separator + "tmpFiles");
-				if (!dir.exists())
-					dir.mkdirs();
+        model.addAttribute("files", storageService
+                .loadAll()
+                .map(path ->
+                        MvcUriComponentsBuilder
+                                .fromMethodName(FileUploadController.class, "serveFile", path.getFileName().toString())
+                                .build().toString())
+                .collect(Collectors.toList()));
 
-				// Create the file on server
-				File serverFile = new File(dir.getAbsolutePath()
-						+ File.separator + name);
-				BufferedOutputStream stream = new BufferedOutputStream(
-						new FileOutputStream(serverFile));
-				stream.write(bytes);
-				stream.close();
+        return "uploadForm";
+    }
 
-				logger.info("Server File Location="
-						+ serverFile.getAbsolutePath());
+    @GetMapping("/files/{filename:.+}")
+    @ResponseBody
+    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
 
-				return "You successfully uploaded file=" + name;
-			} catch (Exception e) {
-				return "You failed to upload " + name + " => " + e.getMessage();
-			}
-		} else {
-			return "You failed to upload " + name
-					+ " because the file was empty.";
-		}
-	}
+        Resource file = storageService.loadAsResource(filename);
+        return ResponseEntity
+                .ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""+file.getFilename()+"\"")
+                .body(file);
+    }
 
-	/**
-	 * Upload multiple file using Spring Controller
-	 */
-	@RequestMapping(value = "/uploadMultipleFile", method = RequestMethod.POST)
-	public @ResponseBody
-	String uploadMultipleFileHandler(@RequestParam("name") String[] names,
-			@RequestParam("file") MultipartFile[] files) {
+    static String readFile(String path, Charset encoding)
+      throws IOException
+    {
+      byte[] encoded = Files.readAllBytes(Paths.get(path));
+      return new String(encoded, encoding);
+    }
 
-		if (files.length != names.length)
-			return "Mandatory information missing";
+    @GetMapping("/parsecsv/{filename:.+}")
+    public String showParsedCsv(Model model, @PathVariable String filename) throws IOException {
 
-		String message = "";
-		for (int i = 0; i < files.length; i++) {
-			MultipartFile file = files[i];
-			String name = names[i];
-			try {
-				byte[] bytes = file.getBytes();
+        Resource file = storageService.loadAsResource(filename);
+        String csvFile = new readFile(file);
 
-				// Creating the directory to store file
-				String rootPath = System.getProperty("catalina.home");
-				File dir = new File(rootPath + File.separator + "tmpFiles");
-				if (!dir.exists())
-					dir.mkdirs();
+        CSVReader reader = null;
+        try {
+            reader = new CSVReader(new FileReader(csvFile));
+            String[] line;
+            while ((line = reader.readNext()) != null) {
+                System.out.println("Country [id= " + line[0] + ", code= " + line[1] + " , name=" + line[2] + "]");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-				// Create the file on server
-				File serverFile = new File(dir.getAbsolutePath()
-						+ File.separator + name);
-				BufferedOutputStream stream = new BufferedOutputStream(
-						new FileOutputStream(serverFile));
-				stream.write(bytes);
-				stream.close();
 
-				logger.info("Server File Location="
-						+ serverFile.getAbsolutePath());
+    @PostMapping("/uploadfile")
+    public String handleFileUpload(@RequestParam("file") MultipartFile file,
+                                   RedirectAttributes redirectAttributes) {
 
-				message = message + "You successfully uploaded file=" + name + "";
-			} catch (Exception e) {
-				return "You failed to upload " + name + " => " + e.getMessage();
-			}
-		}
-		return message;
-	}
+        storageService.store(file);
+        redirectAttributes.addFlashAttribute("message",
+                "You successfully uploaded " + file.getOriginalFilename() + "!");
+
+        return "redirect:/uploadfile";
+    }
+
+    @ExceptionHandler(StorageFileNotFoundException.class)
+    public ResponseEntity handleStorageFileNotFound(StorageFileNotFoundException exc) {
+        return ResponseEntity.notFound().build();
+    }
+
 }
