@@ -15,13 +15,6 @@
         <div id='root'></div>
     </div>
 
-    <form method="POST" enctype="multipart/form-data" action="/uploadfile">
-      <table>
-        <tr><td>File to upload:</td><td><input type="file" name="file" /></td></tr>
-        <tr><td></td><td><input type="submit" value="Upload" /></td></tr>
-      </table>
-    </form>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react.min.js"></script>
     <script src="https://fb.me/react-dom-15.0.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.js"></script>
@@ -34,17 +27,26 @@
     console.log('loading react script')
 
     var Reference = React.createClass({
-      handleDelete: function() {
+      componentWillReceiveProps() {
+        console.log('receiving props', this.props.selected)
+        this.setState({'isChecked': this.props.selected});
+      },
+      selectThis: function() {
+        this.setState({'isChecked': true});
+      },
+      handleDelete: function(e) {
+        e.preventDefault();
         this.props.handleDelete(this.props.reference);
       },
       getInitialState: function() {
         return {display: true };
       },
       render: function() {
-
+        const isChecked = this.state.isChecked ? 'isChecked' : '';
         if (this.state.display==false) return null;
         else return (
           <tr>
+              <td><input type="checkbox" className="check" checked={this.state.isChecked} onClick={this.selectThis}/></td>
               <td>{this.props.reference.author}</td>
               <td>{this.props.reference.title}</td>
               <td>{this.props.reference.year}</td>
@@ -61,6 +63,23 @@
       handleDelete: function(reference) {
         this.props.handleDelete(reference);
       },
+      handleMultipleDeletes: function(e) {
+        e.preventDefault();
+
+        const references = $('.check');
+        for (let i = 0; i < references.length; i++) {
+          if ($('.check').eq(i).is(':checked')) {
+            $('.check').eq(i).parent().parent().find('.btn').click();
+          }
+        }
+      },
+      componentDidMount: function() {
+        this.setState({'selectAll':true});
+      },
+      selectAll: function(e) {
+        e.preventDefault();
+        this.setState({'selectAll':true});
+      },
       render: function() {
 
         var rows = [];
@@ -68,22 +87,47 @@
         this.props.references.forEach(function(reference) {
           console.log(reference);
           rows.push(
-            <Reference reference={reference} key={reference.author} handleDelete={self.handleDelete}/>);
+            <Reference reference={reference} key={reference.author} handleDelete={self.handleDelete} selected={self.state.selectAll}/>);
         });
 
         return (
-          <table className="table table-striped">
-              <thead>
-                  <tr>
-                      <th>Author</th>
-                      <th>Title</th>
-                      <th>Year</th>
-                      <th>Journal</th>
-                      <th>Delete</th>
-                  </tr>
-              </thead>
-              <tbody>{rows}</tbody>
-          </table>
+          <div>
+            <form role="form">
+              <button className="btn select" id="checkAll" onClick={this.selectAll}>Select All</button>
+              <button className="btn delete" onClick={this.handleMultipleDeletes}>Delete</button>
+              <table className="table table-striped">
+                  <thead>
+                      <tr>
+                          <th>Select</th>
+                          <th>Author</th>
+                          <th>Title</th>
+                          <th>Year</th>
+                          <th>Journal</th>
+                          <th>Delete</th>
+                      </tr>
+                  </thead>
+                  <tbody>{rows}</tbody>
+              </table>
+            </form>
+          </div>
+        );
+      }
+    });
+
+    var UploadReferencesForm = React.createClass({
+      upload: function() {
+        var vcfData = new FormData($('#uploadform')[0]);
+        this.props.upload(vcfData);
+      },
+      render: function() {
+        return (
+
+          <form name="form" id="uploadform" method="POST" encType="multipart/form-data" action="/uploadfile">
+            <table>
+              <tbody><tr><td>File to upload:</td><td><input type="file" name="file" /></td></tr>
+                <tr><td /><td><button type="button" id="uploadfiles" form="form" value="Upload" onClick={this.upload}>UPLOAD</button></td></tr>
+              </tbody></table>
+          </form>
         );
       }
     });
@@ -152,14 +196,18 @@
 
     var App = React.createClass({
       handleDelete: function(reference) {
-        console.log('handling delete')
+        console.log('handling delete');
+        const indexOfDeleted = this.state.references.indexOf(reference);
         var self = this;
         $.ajax({
             url: reference._links.self.href,
             method: 'DELETE',
             success: function(result) {
-              self.setState({display: false});
-              self.loadReferencesFromServer();
+              let newRefs = self.state.references.slice();
+              newRefs.splice(indexOfDeleted, 1);
+              console.log(newRefs)
+              self.setState({references: newRefs});
+              // self.loadReferencesFromServer();
             },
             error: function(xhr, ajaxOptions, thrownError) {
               toastr.error(xhr.responseJSON.message);
@@ -178,12 +226,14 @@
       },
 
       getInitialState: function() {
+        this.loadReferencesFromServer();
         return { references: [] };
       },
-
-      componentDidMount: function() {
-        this.loadReferencesFromServer();
-      },
+      //
+      // componentDidMount: function() {
+      //   console.log('whole app mounting again');
+      //   this.loadReferencesFromServer();
+      // },
 
       add(obj) {
         var self = this;
@@ -204,15 +254,45 @@
         });
       },
 
+      upload(vcfData) {
+        var self = this;
+        $.ajax({
+              url : "/uploadfile",
+              type : "post",
+              data : vcfData,
+              processData: false,
+              contentType: false,
+              cache : false,
+              success : function(filename) {
+                $.ajax({
+                      url : "/parsecsv",
+                      type : "POST",
+                      data: {
+                        "filename": filename
+                      },
+                      success : function(data) {
+                        self.loadReferencesFromServer();
+                      },
+                      error : function(data) {
+                        self.forceUpdate();
+                      },
+                  });
+              }
+          });
+      },
+
       render() {
         return (
           <div>
-            <div className="col-md-8">
+            <div className="col-md-12">
               <ReferenceTable references={this.state.references} handleDelete={this.handleDelete}/>
             </div>
-            <div className="col-md-4">
+            <div className="col-md-6">
               <h1>Add a Reference</h1>
               <AddReferencesForm add={this.add} />
+            </div>
+            <div className="col-md-6">
+              <UploadReferencesForm upload={this.upload} />
             </div>
           </div>
         );

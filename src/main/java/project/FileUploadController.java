@@ -101,6 +101,7 @@ public class FileUploadController {
   	}
 
     @PostMapping("/uploadfile")
+    @ResponseBody
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
                                    RedirectAttributes redirectAttributes) {
 
@@ -110,7 +111,10 @@ public class FileUploadController {
 
 
         System.out.println("redirect:/parsecsv/" + file.getOriginalFilename());
-        return "redirect:/parsecsv/" + file.getOriginalFilename();
+        // return "redirect:/parsecsv/" + file.getOriginalFilename();
+        // FileParseController fpc = new FileParseController();
+        // return fpc.showParsedCsv(null, file.getOriginalFilename());
+        return file.getOriginalFilename();
     }
 
     @ExceptionHandler(StorageFileNotFoundException.class)

@@ -69,9 +69,18 @@ public class FileParseController {
         this.repository = repository;
         this.storageService = storageService;
     }
+    //
+    // public class Filename {
+    //     public String filename;
+    //
+    //     setFilename {
+    //       this.filename = filename;
+    //     }
+    // }
 
-    @GetMapping("/parsecsv/{filename:.+}")
-    public String showParsedCsv(Model model, @PathVariable String filename) throws IOException, ParseException, UnirestException {
+    @PostMapping("/parsecsv")
+    @ResponseBody
+    public void showParsedCsv(@RequestParam("filename") String filename, Model model) throws IOException, ParseException, UnirestException {
       System.out.println("In parse CSV map");
 
       System.out.println(filename);
@@ -126,7 +135,7 @@ public class FileParseController {
             ref.setJournal(journal);
             repository.save(ref);
 
-Map<Key, Value> fields = entry.getValue().getFields();
+            Map<Key, Value> fields = entry.getValue().getFields();
             for (Entry<Key, Value> field : fields.entrySet()) {
 
               //  toDisplay = toDisplay.concat(field.getKey() + "=" + field.getValue().toUserString() + "&");
@@ -163,8 +172,8 @@ Map<Key, Value> fields = entry.getValue().getFields();
 
       // System.out.println(jsonResponse);
 
-      String finalUrl = "redirect:/index.html";
-      return finalUrl;
+      // String finalUrl = "redirect:/index.html";
+      // return finalUrl;
 
     }
 
