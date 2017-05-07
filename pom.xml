@@ -54,26 +54,20 @@
         <artifactId>tomcat-embed-jasper</artifactId>
         <scope>provided</scope>
     </dependency>
-    <dependency>
+    <!-- <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>jstl</artifactId>
-    </dependency>
-
+    </dependency> -->
+<!--
 		<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
+		</dependency> -->
 
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
 			<version>${org.springframework-version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>3.8</version>
 		</dependency>
 
 		<!-- Spring Data -->
@@ -92,6 +86,34 @@
 	    <artifactId>h2</artifactId>
 		</dependency>
 
+		<!-- UNIREST AND DEPENDENCIES -->
+		<dependency>
+		  <groupId>org.apache.httpcomponents</groupId>
+		  <artifactId>httpclient</artifactId>
+		  <version>4.3.6</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.apache.httpcomponents</groupId>
+		  <artifactId>httpasyncclient</artifactId>
+		  <version>4.0.2</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.apache.httpcomponents</groupId>
+		  <artifactId>httpmime</artifactId>
+		  <version>4.3.6</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.json</groupId>
+		  <artifactId>json</artifactId>
+		  <version>20140107</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>com.mashape.unirest</groupId>
+		    <artifactId>unirest-java</artifactId>
+		    <version>1.4.9</version>
+		</dependency>
+
 		<!-- AspectJ -->
 		<dependency>
 			<groupId>org.aspectj</groupId>
@@ -104,6 +126,12 @@
 			<groupId>org.jbibtex</groupId>
 			<artifactId>jbibtex</artifactId>
 			<version>1.0.15</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-devtools</artifactId>
+		    <optional>true</optional>
 		</dependency>
 
 		<!-- Logging -->
@@ -188,6 +216,9 @@
 						<plugin>
 								<groupId>org.springframework.boot</groupId>
 								<artifactId>spring-boot-maven-plugin</artifactId>
+								<configuration>
+    								<addResources>true</addResources>
+								</configuration>
 						</plugin>
             <plugin>
                 <artifactId>maven-eclipse-plugin</artifactId>

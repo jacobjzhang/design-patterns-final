@@ -17,6 +17,13 @@ import javax.persistence.Id;
     private String year;
     private String journal;
 
+    // public Reference(String author, String title, String year, String journal) {
+    //     this.author = author;
+    //     this.title = title;
+    //     this.year = year;
+    //     this.journal = journal;
+    // }
+
     public String getAuthor() {
         return author;
     }

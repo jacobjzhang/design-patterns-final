@@ -12,15 +12,37 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import com.opencsv.CSVReader;
 
-import java.io;
-import java.nio;
-import java.nio.*;
+// import org.apache.http.HttpEntity;
+// import org.apache.http.HttpResponse;
+// import org.apache.http.client.HttpClient;
+// import org.apache.http.client.methods.HttpPost;
+// import org.apache.http.entity.StringEntity;
+
+import org.jbibtex.BibTeXDatabase;
+import org.jbibtex.BibTeXEntry;
+import org.jbibtex.BibTeXParser;
+import org.jbibtex.Key;
+import org.jbibtex.ParseException;
+import org.jbibtex.TokenMgrException;
+import org.jbibtex.Value;
+import org.jbibtex.StringValue;
+
+// For file reading
+import java.io.Reader;
+// import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.FileReader.*;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import java.io.IOException;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.List;
+import java.util.Map.Entry;
+
+import java.util.Collection;
+
 
 @Controller
 public class FileUploadController {
@@ -30,6 +52,11 @@ public class FileUploadController {
     @Autowired
     public FileUploadController(StorageService storageService) {
         this.storageService = storageService;
+    }
+
+    @GetMapping("/")
+    public String index() {
+        return "index.html";
     }
 
     @GetMapping("/uploadfile")
@@ -43,7 +70,7 @@ public class FileUploadController {
                                 .build().toString())
                 .collect(Collectors.toList()));
 
-        return "uploadForm";
+        return "uploadForm.html";
     }
 
     @GetMapping("/files/{filename:.+}")
@@ -57,31 +84,21 @@ public class FileUploadController {
                 .body(file);
     }
 
-    static String readFile(String path, Charset encoding)
-      throws IOException
-    {
-      byte[] encoded = Files.readAllBytes(Paths.get(path));
-      return new String(encoded, encoding);
-    }
+    // Utility which converts CSV to ArrayList using Split Operation
+  	public static ArrayList<String> crunchifyCSVtoArrayList(String crunchifyCSV) {
+  		ArrayList<String> crunchifyResult = new ArrayList<String>();
 
-    @GetMapping("/parsecsv/{filename:.+}")
-    public String showParsedCsv(Model model, @PathVariable String filename) throws IOException {
+  		if (crunchifyCSV != null) {
+  			String[] splitData = crunchifyCSV.split("\\s*,\\s*");
+  			for (int i = 0; i < splitData.length; i++) {
+  				if (!(splitData[i] == null) || !(splitData[i].length() == 0)) {
+  					crunchifyResult.add(splitData[i].trim());
+  				}
+  			}
+  		}
 
-        Resource file = storageService.loadAsResource(filename);
-        String csvFile = new readFile(file);
-
-        CSVReader reader = null;
-        try {
-            reader = new CSVReader(new FileReader(csvFile));
-            String[] line;
-            while ((line = reader.readNext()) != null) {
-                System.out.println("Country [id= " + line[0] + ", code= " + line[1] + " , name=" + line[2] + "]");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+  		return crunchifyResult;
+  	}
 
     @PostMapping("/uploadfile")
     public String handleFileUpload(@RequestParam("file") MultipartFile file,
@@ -91,7 +108,9 @@ public class FileUploadController {
         redirectAttributes.addFlashAttribute("message",
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
 
-        return "redirect:/uploadfile";
+
+        System.out.println("redirect:/parsecsv/" + file.getOriginalFilename());
+        return "redirect:/parsecsv/" + file.getOriginalFilename();
     }
 
     @ExceptionHandler(StorageFileNotFoundException.class)
