@@ -27,26 +27,27 @@
     console.log('loading react script')
 
     var Reference = React.createClass({
-      componentWillReceiveProps() {
+      componentDidMount() {
         console.log('receiving props', this.props.selected)
         this.setState({'isChecked': this.props.selected});
-      },
-      selectThis: function() {
-        this.setState({'isChecked': true});
       },
       handleDelete: function(e) {
         e.preventDefault();
         this.props.handleDelete(this.props.reference);
       },
       getInitialState: function() {
-        return {display: true };
+        console.log(this.props.selected)
+        return {display: true, checked: this.props.selected};
+      },
+      toggleCheck: function() {
+        return this.setState({checked: !this.state.checked});
       },
       render: function() {
         const isChecked = this.state.isChecked ? 'isChecked' : '';
         if (this.state.display==false) return null;
         else return (
           <tr>
-              <td><input type="checkbox" className="check" checked={this.state.isChecked} onClick={this.selectThis}/></td>
+              <td><input type="checkbox" className="check" checked={this.state.checked} onClick={this.toggleCheck}/></td>
               <td>{this.props.reference.author}</td>
               <td>{this.props.reference.title}</td>
               <td>{this.props.reference.year}</td>
@@ -73,21 +74,20 @@
           }
         }
       },
-      componentDidMount: function() {
-        this.setState({'selectAll':true});
+      getInitialState: function() {
+        return {'selectAll':false};
       },
       selectAll: function(e) {
         e.preventDefault();
-        this.setState({'selectAll':true});
+        this.setState({'selectAll': !this.state.selectAll});
       },
       render: function() {
 
         var rows = [];
         var self = this;
         this.props.references.forEach(function(reference) {
-          console.log(reference);
           rows.push(
-            <Reference reference={reference} key={reference.author} handleDelete={self.handleDelete} selected={self.state.selectAll}/>);
+            <Reference reference={reference} handleDelete={self.handleDelete} selected={self.state.selectAll}/>);
         });
 
         return (
@@ -99,10 +99,10 @@
                   <thead>
                       <tr>
                           <th>Select</th>
-                          <th>Author</th>
-                          <th>Title</th>
-                          <th>Year</th>
-                          <th>Journal</th>
+                          <th><strong onClick={() => {this.props.reOrder('author')}}>Author</strong></th>
+                          <th><strong onClick={() => {this.props.reOrder('title')}}>Title</strong></th>
+                          <th><strong onClick={() => {this.props.reOrder('year')}}>Year</strong></th>
+                          <th><strong onClick={() => {this.props.reOrder('journal')}}>Journal</strong></th>
                           <th>Delete</th>
                       </tr>
                   </thead>
@@ -198,6 +198,7 @@
       handleDelete: function(reference) {
         console.log('handling delete');
         const indexOfDeleted = this.state.references.indexOf(reference);
+        console.log(indexOfDeleted)
         var self = this;
         $.ajax({
             url: reference._links.self.href,
@@ -254,6 +255,21 @@
         });
       },
 
+      reOrder(sortDef) {
+        console.log(sortDef)
+        console.log(this.state.references)
+        let newRefs = this.state.references;
+        newRefs = newRefs.sort(function(a, b) {
+          if (a[sortDef] < b[sortDef])
+            return -1;
+          if (a[sortDef] > b[sortDef])
+            return 1;
+          return 0;
+        })
+        console.log(newRefs);
+        this.setState({references: newRefs});
+      },
+
       upload(vcfData) {
         var self = this;
         $.ajax({
@@ -285,7 +301,7 @@
         return (
           <div>
             <div className="col-md-12">
-              <ReferenceTable references={this.state.references} handleDelete={this.handleDelete}/>
+              <ReferenceTable references={this.state.references} handleDelete={this.handleDelete} reOrder={this.reOrder}/>
             </div>
             <div className="col-md-6">
               <h1>Add a Reference</h1>
