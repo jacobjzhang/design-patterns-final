@@ -27,17 +27,21 @@
     console.log('loading react script')
 
     var Reference = React.createClass({
-      componentDidMount() {
-        console.log('receiving props', this.props.selected)
-        this.setState({'isChecked': this.props.selected});
-      },
+      // componentDidMount() {
+      //   console.log('receiving props', this.props.selected)
+      //   this.setState({'isChecked': this.props.selected});
+      // },
       handleDelete: function(e) {
         e.preventDefault();
+        this.setState({thumbnail: null});
         this.props.handleDelete(this.props.reference);
       },
       getInitialState: function() {
         console.log(this.props.selected)
         return {display: true, checked: this.props.selected};
+      },
+      componentWillReceiveProps: function() {
+        this.setState({checked: this.props.selected});
       },
       toggleCheck: function() {
         return this.setState({checked: !this.state.checked});
@@ -48,6 +52,7 @@
         else return (
           <tr>
               <td><input type="checkbox" className="check" checked={this.state.checked} onClick={this.toggleCheck}/></td>
+              <td><img src={this.props.reference.thumbnail} /></td>
               <td>{this.props.reference.author}</td>
               <td>{this.props.reference.title}</td>
               <td>{this.props.reference.year}</td>
@@ -67,10 +72,11 @@
       handleMultipleDeletes: function(e) {
         e.preventDefault();
 
-        const references = $('.check');
-        for (let i = 0; i < references.length; i++) {
-          if ($('.check').eq(i).is(':checked')) {
-            $('.check').eq(i).parent().parent().find('.btn').click();
+        for (let key in this) {
+          if (key.indexOf('reference') > -1) {
+            if (this[key].state.checked) {
+              this.props.handleDelete(this[key].props.reference);
+            }
           }
         }
       },
@@ -79,15 +85,19 @@
       },
       selectAll: function(e) {
         e.preventDefault();
+        console.log(this.state.selectAll)
         this.setState({'selectAll': !this.state.selectAll});
       },
       render: function() {
 
         var rows = [];
         var self = this;
-        this.props.references.forEach(function(reference) {
+        this.props.references.forEach(function(reference, i) {
           rows.push(
-            <Reference reference={reference} handleDelete={self.handleDelete} selected={self.state.selectAll}/>);
+            <Reference reference={reference}
+              handleDelete={self.handleDelete}
+              selected={self.state.selectAll}
+              ref={(el) => {self['reference' + i] = el;}} />);
         });
 
         return (
@@ -99,6 +109,7 @@
                   <thead>
                       <tr>
                           <th>Select</th>
+                          <th><strong>Cover</strong></th>
                           <th><strong onClick={() => {this.props.reOrder('author')}}>Author</strong></th>
                           <th><strong onClick={() => {this.props.reOrder('title')}}>Title</strong></th>
                           <th><strong onClick={() => {this.props.reOrder('year')}}>Year</strong></th>
@@ -215,26 +226,25 @@
             }
         });
       },
-      loadReferencesFromServer: function() {
-
+      loadReferencesFromServer: function(callback) {
         var self = this;
         $.ajax({
             url: "http://localhost:8080/api/references",
           }).then(function(data) {
             self.setState({ references: data._embedded.references });
+            callback();
           });
 
       },
 
       getInitialState: function() {
-        this.loadReferencesFromServer();
         return { references: [] };
       },
       //
-      // componentDidMount: function() {
-      //   console.log('whole app mounting again');
-      //   this.loadReferencesFromServer();
-      // },
+      componentDidMount: function() {
+        console.log('test')
+        this.loadReferencesFromServer(this.getThumbs);
+      },
 
       add(obj) {
         var self = this;
@@ -254,7 +264,33 @@
             }
         });
       },
+      getThumbs: function() {
+        console.log('getting thumbnails', this.state.references.length)
+        this.state.references.forEach((el, i) => {
+          console.log('in foreach')
+          const self = this;
+          $.ajax({
+              url: "https://www.googleapis.com/books/v1/volumes?q=" + el.title + "&fields=items(volumeInfo(imageLinks(thumbnail)))",
+              headers: {
+                  'Content-Type':'application/json'
+              },
+              method: 'GET',
+              dataType: 'json',
+              success: function(result) {
+                console.log(result)
+                const thumb = result.items[0].volumeInfo.imageLinks.thumbnail;
+                const newRefs = self.state.references
+                const refWithThumb = newRefs[i];
+                refWithThumb.thumbnail = thumb;
+                self.setState({references: newRefs});
+              },
+              error: function(xhr, ajaxOptions, thrownError) {
+                toastr.error(xhr.responseJSON.message);
+              }
+          });
+        })
 
+      },
       reOrder(sortDef) {
         console.log(sortDef)
         console.log(this.state.references)
@@ -287,7 +323,7 @@
                         "filename": filename
                       },
                       success : function(data) {
-                        self.loadReferencesFromServer();
+                        self.loadReferencesFromServer(self.getThumbs);
                       },
                       error : function(data) {
                         self.forceUpdate();
