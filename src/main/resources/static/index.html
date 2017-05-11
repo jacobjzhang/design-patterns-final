@@ -294,10 +294,12 @@
         console.log(this.state.references)
 
         let newRefs = this.state.references;
-        let order;
+        let orderRule, newOrder;
         // if we're sorting by this column and it's ascending, make it descending
         console.log(this.state.order, '------this.state.order----')
-        if (this.state.order.find((el) => {return el.sortDef === sortDef && el.ascending === true} )) {
+        // should be existingPositiveOrdeRule
+        const existingOrderRule = this.state.order.find((el) => {return el.sortDef === sortDef && el.ascending === true} );
+        if (existingOrderRule) {
           console.log('making it descending')
             newRefs = newRefs.sort(function(a, b) {
               if (a[sortDef] < b[sortDef])
@@ -306,7 +308,8 @@
                 return 1;
               return 0;
             })
-          order = {'sortDef': sortDef, 'ascending': false };
+          orderRule = {'sortDef': sortDef, 'ascending': false };
+
         } else {
           console.log('making it ascending')
           // otherwise default to ascending
@@ -317,10 +320,19 @@
               return -1;
             return 0;
           })
-          order = {'sortDef': sortDef, 'ascending': true };
+          orderRule = {'sortDef': sortDef, 'ascending': true };
         }
+
+        newOrder = this.state.order;
+        const indexOfOrderRule = newOrder.indexOf(existingOrderRule);
+        if (indexOfOrderRule > -1) {
+          newOrder[indexOfOrderRule] = orderRule;
+        } else {
+          newOrder.push(orderRule);
+        }
+
       console.log(newRefs);
-      this.setState({references: newRefs, order: this.state.order.concat([order])});
+      this.setState({references: newRefs, order: newOrder});
       },
 
       upload(vcfData) {
