@@ -37,11 +37,7 @@
         this.props.handleDelete(this.props.reference);
       },
       getInitialState: function() {
-        console.log(this.props.selected)
-        return {display: true, checked: this.props.selected};
-      },
-      componentWillReceiveProps: function() {
-        this.setState({checked: this.props.selected});
+        return {display: true, checked: false};
       },
       toggleCheck: function() {
         return this.setState({checked: !this.state.checked});
@@ -81,22 +77,24 @@
         }
       },
       getInitialState: function() {
-        return {'selectAll':false};
+        return {};
       },
       selectAll: function(e) {
         e.preventDefault();
-        console.log(this.state.selectAll)
-        this.setState({'selectAll': !this.state.selectAll});
+
+        for (let key in this) {
+          if (key.indexOf('reference') > -1) {
+              this[key].toggleCheck();
+          }
+        }
       },
       render: function() {
-
         var rows = [];
         var self = this;
         this.props.references.forEach(function(reference, i) {
           rows.push(
             <Reference reference={reference}
               handleDelete={self.handleDelete}
-              selected={self.state.selectAll}
               ref={(el) => {self['reference' + i] = el;}} />);
         });
 
@@ -238,7 +236,7 @@
       },
 
       getInitialState: function() {
-        return { references: [] };
+        return { references: [], order: [] };
       },
       //
       componentDidMount: function() {
@@ -294,16 +292,35 @@
       reOrder(sortDef) {
         console.log(sortDef)
         console.log(this.state.references)
+
         let newRefs = this.state.references;
-        newRefs = newRefs.sort(function(a, b) {
-          if (a[sortDef] < b[sortDef])
-            return -1;
-          if (a[sortDef] > b[sortDef])
-            return 1;
-          return 0;
-        })
-        console.log(newRefs);
-        this.setState({references: newRefs});
+        let order;
+        // if we're sorting by this column and it's ascending, make it descending
+        console.log(this.state.order, '------this.state.order----')
+        if (this.state.order.find((el) => {return el.sortDef === sortDef && el.ascending === true} )) {
+          console.log('making it descending')
+            newRefs = newRefs.sort(function(a, b) {
+              if (a[sortDef] < b[sortDef])
+                return -1;
+              if (a[sortDef] > b[sortDef])
+                return 1;
+              return 0;
+            })
+          order = {'sortDef': sortDef, 'ascending': false };
+        } else {
+          console.log('making it ascending')
+          // otherwise default to ascending
+          newRefs = newRefs.sort(function(a, b) {
+            if (a[sortDef] < b[sortDef])
+              return 1;
+            if (a[sortDef] > b[sortDef])
+              return -1;
+            return 0;
+          })
+          order = {'sortDef': sortDef, 'ascending': true };
+        }
+      console.log(newRefs);
+      this.setState({references: newRefs, order: this.state.order.concat([order])});
       },
 
       upload(vcfData) {
