@@ -10,6 +10,15 @@ var FieldName = React.createClass({
   toggleEditing() {
     this.setState( {isEditing: !this.state.isEditing });
   },
+  requestChange(e) {
+    this.setState({isEditing: false})
+    console.log('request change in field')
+    e.preventDefault();
+    const fieldName = this.props.field;
+    const obj = {};
+    obj[fieldName] = this.state.newValue;
+    this.props.requestChange(obj)
+  },
   render() {
     let output;
     if (!this.state.isEditing) {
@@ -18,7 +27,7 @@ var FieldName = React.createClass({
       return (
         <form>
           <input ref={(el) => {this[this.props.field] = el}} type="text" placeholder={this.props.msg} value={this.state.newValue} onChange={this.readValue} />
-          <button className="btn btn-primary" onClick={this.props.requestChange}>Submit</button>
+          <button className="btn btn-primary" onClick={this.requestChange}>Submit</button>
         </form>
       )
     }
@@ -30,11 +39,9 @@ var Reference = React.createClass({
   //   console.log('receiving props', this.props.selected)
   //   this.setState({'isChecked': this.props.selected});
   // },
-  requestChange(reference) {
-    // const field = this[];
-    // const fieldName = self.props.field;
-    // const obj = {};
-    // obj[fieldName] = this.state.newValue;
+  requestChange(obj) {
+    const self = this;
+    console.log('request change in reference')
     $.ajax({
         url: this.props.reference._links.self.href,
         method: 'PATCH',
@@ -45,7 +52,8 @@ var Reference = React.createClass({
         },
         success: function(result) {
           console.log(result)
-          self.setState({isEditing: false})
+          self.setState({reference: result});
+          self.forceUpdate();
         },
         error: function(xhr, ajaxOptions, thrownError) {
           toastr.error(xhr.responseJSON.message);
@@ -58,7 +66,7 @@ var Reference = React.createClass({
     this.props.handleDelete(this.props.reference);
   },
   getInitialState: function() {
-    return {display: true, checked: false};
+    return {display: true, checked: false, reference: this.props.reference};
   },
   toggleCheck: function() {
     return this.setState({checked: !this.state.checked});
@@ -70,10 +78,10 @@ var Reference = React.createClass({
       <tr>
           <td><input type="checkbox" className="check" checked={this.state.checked} onClick={this.toggleCheck}/></td>
           <td><img src={this.props.reference.thumbnail} /></td>
-          <td><FieldName field='author' msg={this.props.reference.author} reference={this.props.reference} requestChange={this.requestChange}/></td>
-          <td><FieldName field='title' msg={this.props.reference.title} reference={this.props.reference}  requestChange={this.requestChange}/></td>
-          <td><FieldName field='year' msg={this.props.reference.year} reference={this.props.reference}  requestChange={this.requestChange}/></td>
-          <td><FieldName field='journal' msg={this.props.reference.journal} reference={this.props.reference}  requestChange={this.requestChange}/></td>
+          <td><FieldName field='author' msg={this.state.reference.author} reference={this.state.reference} requestChange={this.requestChange}/></td>
+          <td><FieldName field='title' msg={this.state.reference.title} reference={this.state.reference}  requestChange={this.requestChange}/></td>
+          <td><FieldName field='year' msg={this.state.reference.year} reference={this.state.reference}  requestChange={this.requestChange}/></td>
+          <td><FieldName field='journal' msg={this.state.reference.journal} reference={this.state.reference}  requestChange={this.requestChange}/></td>
           <td>
             <button className="btn btn-info" onClick={this.handleDelete}>Delete</button>
           </td>
