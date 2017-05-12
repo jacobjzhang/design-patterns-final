@@ -1,10 +1,57 @@
 console.log('loading react script')
 
+var FieldName = React.createClass({
+  getInitialState() {
+    return { isEditing: false, newValue: '' };
+  },
+  readValue(event) {
+    this.setState({ newValue: event.target.value})
+  },
+  toggleEditing() {
+    this.setState( {isEditing: !this.state.isEditing });
+  },
+  render() {
+    let output;
+    if (!this.state.isEditing) {
+      return (<div onClick={this.toggleEditing}>{this.props.msg}</div>);
+    } else {
+      return (
+        <form>
+          <input ref={(el) => {this[this.props.field] = el}} type="text" placeholder={this.props.msg} value={this.state.newValue} onChange={this.readValue} />
+          <button className="btn btn-primary" onClick={this.props.requestChange}>Submit</button>
+        </form>
+      )
+    }
+  }
+});
+
 var Reference = React.createClass({
   // componentDidMount() {
   //   console.log('receiving props', this.props.selected)
   //   this.setState({'isChecked': this.props.selected});
   // },
+  requestChange(reference) {
+    // const field = this[];
+    // const fieldName = self.props.field;
+    // const obj = {};
+    // obj[fieldName] = this.state.newValue;
+    $.ajax({
+        url: this.props.reference._links.self.href,
+        method: 'PATCH',
+        data: JSON.stringify(obj),
+        headers: {
+          'content-type': 'application/json',
+          'accept': 'application/json'
+        },
+        success: function(result) {
+          console.log(result)
+          self.setState({isEditing: false})
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+          toastr.error(xhr.responseJSON.message);
+        }
+    });
+  },
   handleDelete: function(e) {
     e.preventDefault();
     this.setState({thumbnail: null});
@@ -23,10 +70,10 @@ var Reference = React.createClass({
       <tr>
           <td><input type="checkbox" className="check" checked={this.state.checked} onClick={this.toggleCheck}/></td>
           <td><img src={this.props.reference.thumbnail} /></td>
-          <td>{this.props.reference.author}</td>
-          <td>{this.props.reference.title}</td>
-          <td>{this.props.reference.year}</td>
-          <td>{this.props.reference.journal}</td>
+          <td><FieldName field='author' msg={this.props.reference.author} reference={this.props.reference} requestChange={this.requestChange}/></td>
+          <td><FieldName field='title' msg={this.props.reference.title} reference={this.props.reference}  requestChange={this.requestChange}/></td>
+          <td><FieldName field='year' msg={this.props.reference.year} reference={this.props.reference}  requestChange={this.requestChange}/></td>
+          <td><FieldName field='journal' msg={this.props.reference.journal} reference={this.props.reference}  requestChange={this.requestChange}/></td>
           <td>
             <button className="btn btn-info" onClick={this.handleDelete}>Delete</button>
           </td>

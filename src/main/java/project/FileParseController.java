@@ -8,29 +8,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.*;
 
-// import org.apache.http.HttpEntity;
-// import org.apache.http.HttpResponse;
-// import org.apache.http.client.HttpClient;
-// import org.apache.http.client.methods.HttpPost;
-// import org.apache.http.entity.StringEntity;
-
-import org.jbibtex.BibTeXDatabase;
-import org.jbibtex.BibTeXEntry;
-import org.jbibtex.BibTeXParser;
-import org.jbibtex.Key;
-import org.jbibtex.ParseException;
-import org.jbibtex.TokenMgrException;
-import org.jbibtex.Value;
-import org.jbibtex.StringValue;
+import org.jbibtex.*;
 
 // For file reading
 import java.io.Reader;
-// import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,16 +30,6 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-// public class StringValue {
-//
-//     @Override
-//     public String toString() {
-//         String yourResult = this.type; // + ...
-//         return yourResult;
-//     }
-//
-// }
-
 @Controller
 public class FileParseController {
 
@@ -69,25 +42,12 @@ public class FileParseController {
         this.repository = repository;
         this.storageService = storageService;
     }
-    //
-    // public class Filename {
-    //     public String filename;
-    //
-    //     setFilename {
-    //       this.filename = filename;
-    //     }
-    // }
 
     @PostMapping("/parsecsv")
     @ResponseBody
     public void showParsedCsv(@RequestParam("filename") String filename, Model model) throws IOException, ParseException, UnirestException {
-      System.out.println("In parse CSV map");
-
-      System.out.println(filename);
-
       Reader crunchifyBuffer = null;
 
-      // String toDisplay = new String();
       try {
 
         Resource file = storageService.loadAsResource(filename);
@@ -98,31 +58,11 @@ public class FileParseController {
 
         org.jbibtex.BibTeXDatabase database = bibtexParser.parse(crunchifyBuffer);
 
-        // final Map<Key, BibTeXEntry> entries = database.getEntries();
-        // Map<org.jbibtex.Key, org.jbibtex.BibTeXEntry> entryMap = database.getEntries();
         final Map<Key, BibTeXEntry> entries = database.getEntries();
 
         System.out.println("Found " + entries.size() + " entries.");
 
-
         for (Entry<Key, BibTeXEntry> entry : entries.entrySet() ) {
-        // Collection<org.jbibtex.BibTeXEntry> entries = entryMap.values();
-        // for(org.jbibtex.BibTeXEntry entry : entries){
-           //
-          //  org.jbibtex.Value value = entry.getField(org.jbibtex.BibTeXEntry.KEY_TITLE);
-           //
-          //  String thisStr = value.toUserString();
-          //  String latexString = thisStr;
-           //
-          //   org.jbibtex.LaTeXParser latexParser = new org.jbibtex.LaTeXParser();
-           //
-          //   List<org.jbibtex.LaTeXObject> latexObjects = latexParser.parse(latexString);
-           //
-          //   org.jbibtex.LaTeXPrinter latexPrinter = new org.jbibtex.LaTeXPrinter();
-           //
-          //   String plainTextString = latexPrinter.print(latexObjects);
-           //
-          //   System.out.println(plainTextString);
             String author = entry.getValue().getField(org.jbibtex.BibTeXEntry.KEY_AUTHOR) != null ? entry.getValue().getField(org.jbibtex.BibTeXEntry.KEY_AUTHOR).toUserString() : "Author";
             String title = entry.getValue().getField(org.jbibtex.BibTeXEntry.KEY_TITLE) != null ? entry.getValue().getField(org.jbibtex.BibTeXEntry.KEY_TITLE).toUserString() : "Title";
             String year = entry.getValue().getField(org.jbibtex.BibTeXEntry.KEY_YEAR) != null ? entry.getValue().getField(org.jbibtex.BibTeXEntry.KEY_YEAR).toUserString() : "Year";
