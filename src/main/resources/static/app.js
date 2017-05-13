@@ -530,6 +530,10 @@ var App = React.createClass({
     });
   },
 
+  closeModal() {
+    $('.addref-wrapper').css({'display':'none', 'visibility': 'hidden'});
+  },
+
   render() {
     return (
       <div>
@@ -543,6 +547,7 @@ var App = React.createClass({
         <div className="col-md-6 addref-wrapper">
           <div className="addref-container">
             <h1>Add a Reference</h1>
+            <h3 onClick={this.closeModal}>Close</h3>
             <AddReferencesForm add={this.add} />
           </div>
         </div>
