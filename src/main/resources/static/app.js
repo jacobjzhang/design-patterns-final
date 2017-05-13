@@ -100,7 +100,7 @@ var Reference = React.createClass({
           <td>
             <FieldName
               field="author"
-              msg={this.state.reference.author}
+              msg={this.props.reference.author}
               reference={this.state.reference}
               requestChange={this.requestChange}
             />
@@ -108,7 +108,7 @@ var Reference = React.createClass({
           <td>
             <FieldName
               field="title"
-              msg={this.state.reference.title}
+              msg={this.props.reference.title}
               reference={this.state.reference}
               requestChange={this.requestChange}
             />
@@ -116,7 +116,7 @@ var Reference = React.createClass({
           <td>
             <FieldName
               field="year"
-              msg={this.state.reference.year}
+              msg={this.props.reference.year}
               reference={this.state.reference}
               requestChange={this.requestChange}
             />
@@ -124,7 +124,7 @@ var Reference = React.createClass({
           <td>
             <FieldName
               field="journal"
-              msg={this.state.reference.journal}
+              msg={this.props.reference.journal}
               reference={this.state.reference}
               requestChange={this.requestChange}
             />
@@ -170,6 +170,11 @@ var ReferenceTable = React.createClass({
     }
   },
 
+  showUpload(e) {
+    e.preventDefault();
+    $('.addref-wrapper').css({'display':'initial', 'visibility': 'visible'});
+  },
+
   render: function() {
     var rows = [];
     var self = this;
@@ -188,12 +193,22 @@ var ReferenceTable = React.createClass({
     return (
       <div>
         <form role="form">
-          <button className="btn select" id="checkAll" onClick={this.selectAll}>
-            Select All
-          </button>
-          <button className="btn delete" onClick={this.handleMultipleDeletes}>
-            Delete
-          </button>
+          <div className='left-buttons'>
+            <button className="btn btn-primary select" id="checkAll" onClick={this.selectAll}>
+              Select All
+            </button>
+            <button className="btn btn-primary delete" onClick={this.handleMultipleDeletes}>
+              Delete
+            </button>
+          </div>
+          <div className='right-buttons'>
+            <button className="btn btn-primary upload" id="upload" onClick={this.showUpload}>
+              Upload BibTex
+            </button>
+            <button className="btn btn-primary addref" onClick={this.addRef}>
+              Add a Reference
+            </button>
+          </div>
           <table className="table table-striped">
             <thead>
               <tr>
@@ -525,11 +540,13 @@ var App = React.createClass({
             reOrder={this.reOrder}
           />
         </div>
-        <div className="col-md-6">
-          <h1>Add a Reference</h1>
-          <AddReferencesForm add={this.add} />
+        <div className="col-md-6 addref-wrapper">
+          <div className="addref-container">
+            <h1>Add a Reference</h1>
+            <AddReferencesForm add={this.add} />
+          </div>
         </div>
-        <div className="col-md-6">
+        <div className="col-md-6 upload-wrapper">
           <UploadReferencesForm upload={this.upload} />
         </div>
       </div>
