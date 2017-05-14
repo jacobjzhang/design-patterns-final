@@ -2,16 +2,23 @@
   margin-top: 20px;
 }
 
-.left-buttons, .right-buttons {
-  width: 50%;
+.left-buttons {
+  width: 30%;
   float: left;
+  margin-bottom: 20px;
+}
+
+.right-buttons {
+  width: 70%;
+  float: left;
+  margin-bottom: 20px;
 }
 
 .select, .delete, .upload, .addref {
   margin: 0 10px;
 }
 
-.addref-wrapper {
+.addref-wrapper, .upload-wrapper {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -22,11 +29,20 @@
   visibility: hidden;
 }
 
-.addref-container {
+.addref-container, .upload-container {
   width: 530px;
   margin: 40px auto;
   background: #fff;
   padding: 30px;
   border: 2px solid #000;
   border-radius: 25px;
+}
+
+.search {
+  width: 45%;
+  display: inline-block;
+}
+
+.right-buttons button {
+  float: right;
 }

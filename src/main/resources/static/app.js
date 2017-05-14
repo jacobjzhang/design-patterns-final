@@ -10,20 +10,19 @@ var FieldName = React.createClass({
   toggleEditing() {
     this.setState({ isEditing: !this.state.isEditing });
   },
-
   requestChange(e) {
-    this.setState({ isEditing: false });
-    console.log("request change in field");
     e.preventDefault();
     const fieldName = this.props.field;
     const obj = {};
     obj[fieldName] = this.state.newValue;
     this.props.requestChange(obj);
+    this.setState({ changed: true, isEditing: false });
   },
   render() {
+    let msg = this.state.changed ? this.state.newValue : this.props.msg;
     let output;
     if (!this.state.isEditing) {
-      return <div onClick={this.toggleEditing}>{this.props.msg}</div>;
+      return <div onClick={this.toggleEditing}>{msg}</div>;
     } else {
       return (
         <form>
@@ -170,9 +169,15 @@ var ReferenceTable = React.createClass({
     }
   },
 
-  showUpload(e) {
+  showModal(e, modal) {
     e.preventDefault();
-    $('.addref-wrapper').css({'display':'initial', 'visibility': 'visible'});
+
+    const modalMap = {
+      'addref' : '.addref-wrapper',
+      'upload' : '.upload-wrapper'
+    }
+
+    $(modalMap[modal]).css({'display':'initial', 'visibility': 'visible'});
   },
 
   render: function() {
@@ -202,11 +207,21 @@ var ReferenceTable = React.createClass({
             </button>
           </div>
           <div className='right-buttons'>
-            <button className="btn btn-primary upload" id="upload" onClick={this.showUpload}>
+            <input
+              className="form-control search"
+              type="text"
+              name="search"
+              placeholder="Search"
+              onChange={(e) => { this.props.search(e.target.value) }}
+            />
+            <button className="btn btn-primary upload" id="upload" onClick={(e) => {this.showModal(e, 'upload')}}>
               Upload BibTex
             </button>
-            <button className="btn btn-primary addref" onClick={this.addRef}>
+            <button className="btn btn-primary addref" onClick={(e) => {this.showModal(e, 'addref')}}>
               Add a Reference
+            </button>
+            <button className="btn btn-danger" onClick={this.props.exportFile}>
+              Export Bib
             </button>
           </div>
           <table className="table table-striped">
@@ -267,37 +282,46 @@ var UploadReferencesForm = React.createClass({
     this.props.upload(vcfData);
   },
 
+  closeModal() {
+    $('.upload-wrapper').css({'display':'none', 'visibility': 'hidden'});
+  },
+
   render: function() {
     return (
-      <form
-        name="form"
-        id="uploadform"
-        method="POST"
-        encType="multipart/form-data"
-        action="/uploadfile"
-      >
-        <table>
-          <tbody>
-            <tr>
-              <td>File to upload:</td><td><input type="file" name="file" /></td>
-            </tr>
-            <tr>
-              <td />
-              <td>
-                <button
-                  type="button"
-                  id="uploadfiles"
-                  form="form"
-                  value="Upload"
-                  onClick={this.upload}
-                >
-                  UPLOAD
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </form>
+      <div className="upload-container">
+        <h4 onClick={this.closeModal}>Close</h4>
+        <h1>Upload BibTex File</h1>
+
+        <form
+          name="form"
+          id="uploadform"
+          method="POST"
+          encType="multipart/form-data"
+          action="/uploadfile"
+        >
+          <table>
+            <tbody>
+              <tr>
+                <td>File to upload:</td><td><input type="file" name="file" /></td>
+              </tr>
+              <tr>
+                <td />
+                <td>
+                  <button
+                    type="button"
+                    id="uploadfiles"
+                    form="form"
+                    value="Upload"
+                    onClick={this.upload}
+                  >
+                    UPLOAD
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </form>
+      </div>
     );
   }
 });
@@ -333,52 +357,61 @@ var AddReferencesForm = React.createClass({
     });
   },
 
+  closeModal() {
+    $('.addref-wrapper').css({'display':'none', 'visibility': 'hidden'});
+  },
+
   render: function() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <div className="form-group row">
-          <div className="col-2 col-form-label">Author</div>
-          <input
-            className="col-10 form-control"
-            type="text"
-            name="author"
-            placeholder={this.state.author}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-group row">
-          <div className="col-2 col-form-label">Title</div>
-          <input
-            className="col-10 form-control"
-            type="text"
-            name="title"
-            placeholder={this.state.title}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-group row">
-          <div className="col-2 col-form-label">Year</div>
-          <input
-            className="col-10 form-control"
-            type="text"
-            name="year"
-            placeholder={this.state.year}
-            onChange={this.handleInputChange}
-          />
-        </div>
-        <div className="form-group row">
-          <div className="col-2 col-form-label">Journal</div>
-          <input
-            className="col-10 form-control"
-            type="text"
-            name="journal"
-            placeholder={this.state.journal}
-            onChange={this.handleInputChange}
-          />
-        </div>
+      <div className="addref-container">
+        <h4 onClick={this.closeModal}>Close</h4>
+        <h1>Add a Reference</h1>
 
-        <input className="btn btn-info" type="submit" value="Submit" />
-      </form>
+        <form onSubmit={this.handleSubmit}>
+          <div className="form-group row">
+            <div className="col-2 col-form-label">Author</div>
+            <input
+              className="col-10 form-control"
+              type="text"
+              name="author"
+              placeholder={this.state.author}
+              onChange={this.handleInputChange}
+            />
+          </div>
+          <div className="form-group row">
+            <div className="col-2 col-form-label">Title</div>
+            <input
+              className="col-10 form-control"
+              type="text"
+              name="title"
+              placeholder={this.state.title}
+              onChange={this.handleInputChange}
+            />
+          </div>
+          <div className="form-group row">
+            <div className="col-2 col-form-label">Year</div>
+            <input
+              className="col-10 form-control"
+              type="text"
+              name="year"
+              placeholder={this.state.year}
+              onChange={this.handleInputChange}
+            />
+          </div>
+          <div className="form-group row">
+            <div className="col-2 col-form-label">Journal</div>
+            <input
+              className="col-10 form-control"
+              type="text"
+              name="journal"
+              placeholder={this.state.journal}
+              onChange={this.handleInputChange}
+            />
+          </div>
+
+          <input className="btn btn-info" type="submit" value="Submit" />
+        </form>
+      </div>
     );
   }
 });
@@ -407,13 +440,13 @@ var App = React.createClass({
     $.ajax({
       url: "http://localhost:8080/api/references"
     }).then(function(data) {
-      self.setState({ references: data._embedded.references });
+      self.setState({ originalRefs: data._embedded.references, references: data._embedded.references });
       callback();
     });
   },
 
   getInitialState: function() {
-    return { references: [], order: [] };
+    return { originRefs: [], references: [], order: [] };
   },
 
   componentDidMount: function() {
@@ -439,6 +472,21 @@ var App = React.createClass({
     });
   },
 
+  search(value) {
+    let filteredRefs = [];
+    value = value.toLowerCase();
+    for (let ref in this.state.originalRefs) {
+      const thisRef = this.state.originalRefs[ref];
+      if (thisRef.title.toLowerCase().indexOf(value) > -1 ||
+          thisRef.author.toLowerCase().indexOf(value) > -1 ||
+          thisRef.year.toLowerCase().indexOf(value) > -1 ||
+          thisRef.journal.toLowerCase().indexOf(value) > -1) {
+        filteredRefs.push(this.state.originalRefs[ref]);
+      }
+    }
+    this.setState({ references: filteredRefs});
+  },
+
   getThumbs: function() {
     this.state.references.forEach((el, i) => {
 
@@ -460,7 +508,12 @@ var App = React.createClass({
           self.setState({ references: newRefs });
         },
         error: function(xhr, ajaxOptions, thrownError) {
-          toastr.error(xhr.responseJSON.message);
+          const thumb = '/defaultcover.jpg';
+          const newRefs = self.state.references;
+          const refWithThumb = newRefs[i];
+          refWithThumb.thumbnail = thumb;
+          self.setState({ references: newRefs });
+          // toastr.error(xhr.responseJSON.message);
         }
       });
     });
@@ -514,7 +567,7 @@ var App = React.createClass({
       cache: false,
       success: function(filename) {
         $.ajax({
-          url: "/parsecsv",
+          url: "/parsebib",
           type: "POST",
           data: {
             filename: filename
@@ -530,8 +583,24 @@ var App = React.createClass({
     });
   },
 
-  closeModal() {
-    $('.addref-wrapper').css({'display':'none', 'visibility': 'hidden'});
+  exportFile(e) {
+    e.preventDefault();
+
+    let finalFile = '';
+    const currentRefs = this.state.references;
+    for (let ref in currentRefs) {
+      const thisRef = currentRefs[ref];
+      const refString = [
+        '@article{', ref, '\n',
+        'author = ', thisRef.author, '\n',
+        'journal = ', thisRef.journal, '\n',
+        'title = ', thisRef.title, '\n',
+        'year = ', thisRef.year, '\n',
+        '},\n\n'
+      ].join('');
+      finalFile = finalFile.concat(refString);
+    };
+    window.open('data:text/plain;charset=utf-8,' + encodeURIComponent(finalFile), 'bib.bib');
   },
 
   render() {
@@ -542,14 +611,12 @@ var App = React.createClass({
             references={this.state.references}
             handleDelete={this.handleDelete}
             reOrder={this.reOrder}
+            search={this.search}
+            exportFile={this.exportFile}
           />
         </div>
         <div className="col-md-6 addref-wrapper">
-          <div className="addref-container">
-            <h1>Add a Reference</h1>
-            <h3 onClick={this.closeModal}>Close</h3>
             <AddReferencesForm add={this.add} />
-          </div>
         </div>
         <div className="col-md-6 upload-wrapper">
           <UploadReferencesForm upload={this.upload} />

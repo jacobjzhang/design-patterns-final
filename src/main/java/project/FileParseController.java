@@ -47,12 +47,12 @@ public class FileParseController {
       this.storageService = storageService;
     }
 
-    @PostMapping("/parsecsv")
+    @PostMapping("/parsebib")
     @ResponseBody
     public void showParsedCsv(@RequestParam("filename") String filename, Model model)
       throws IOException, ParseException {
 
-      System.out.println("In parse CSV map");
+      System.out.println("In parse Bib map");
 
       System.out.println(filename);
 
@@ -81,14 +81,6 @@ public class FileParseController {
           ref.setYear(year);
           ref.setJournal(journal);
           repository.save(ref);
-
-          // Map<Key, Value> fields = entry.getValue().getFields();
-          // for (Entry<Key, Value> field : fields.entrySet()) {
-          //    System.out.println(field.getKey() + " : " + field.getValue().toUserString());
-          // }
-          //
-          // System.out.println("----------------------");
-
         }
 
       } catch (IOException e) {
