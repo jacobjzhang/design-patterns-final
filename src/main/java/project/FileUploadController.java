@@ -13,12 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-// import org.apache.http.HttpEntity;
-// import org.apache.http.HttpResponse;
-// import org.apache.http.client.HttpClient;
-// import org.apache.http.client.methods.HttpPost;
-// import org.apache.http.entity.StringEntity;
-
 import org.jbibtex.BibTeXDatabase;
 import org.jbibtex.BibTeXEntry;
 import org.jbibtex.BibTeXParser;
@@ -30,7 +24,6 @@ import org.jbibtex.StringValue;
 
 // For file reading
 import java.io.Reader;
-// import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -110,10 +103,7 @@ public class FileUploadController {
                 "You successfully uploaded " + file.getOriginalFilename() + "!");
 
 
-        System.out.println("redirect:/parsecsv/" + file.getOriginalFilename());
-        // return "redirect:/parsecsv/" + file.getOriginalFilename();
-        // FileParseController fpc = new FileParseController();
-        // return fpc.showParsedCsv(null, file.getOriginalFilename());
+        System.out.println("redirect:/parsebib/" + file.getOriginalFilename());
         return file.getOriginalFilename();
     }
 
